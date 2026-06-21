@@ -1,0 +1,56 @@
+---
+description: IP Checker のビルド・実行手順（エージェントはビルドを自分で実行する）
+globs: "**/*.{csproj,xaml,cs,ps1}"
+alwaysApply: true
+---
+
+# IP Checker — Build & Run
+
+## エージェント向けルール（必須）
+
+- **ビルドはエージェントが実行する。** ユーザーに「リビルドしてください」と依頼しない。
+- **ビルド前に IP Checker が起動中なら強制終了する**（トレイ常駐含む）:
+
+```powershell
+Stop-Process -Name IPChecker -Force -ErrorAction SilentlyContinue
+```
+
+- コード変更後は、返答前に必ず次を実行して結果を報告する:
+
+```powershell
+dotnet build "IPChecker\IPChecker.csproj" -p:Platform=x64
+```
+
+- ビルド失敗時はエラーを修正し、**成功するまで** 再ビルドする。
+- **リリース時**は `.\scripts\Build-Installer.ps1` を実行し、**インストーラーとポータブル ZIP の両方**を生成する（詳細: リポジトリ直下 `BUILD_RULES.md`）。
+- 実行確認が必要なときも、可能な範囲でエージェントが `dotnet build` / exe 起動まで行う。
+- ユーザーへの案内は **F5 での動作確認** 程度に留め、ビルド手順の丸投げはしない。
+
+## 前提
+
+- Visual Studio 2022+ または .NET 8 SDK
+- WinUI 3 / Windows App SDK 2.x
+- Package 実行時: Windows **開発者モード** ON
+
+## Visual Studio（ユーザー向け・実行確認）
+
+1. `IPChecker.csproj` を開く
+2. 構成: **Debug | x64**
+3. 起動プロファイル: **IPChecker (Unpackaged)**（既定）
+4. **F5** で実行
+
+`IPChecker (Package)` は MSIX ツール未導入環境では起動できない。
+
+## 出力パス
+
+```
+bin\x64\Debug\net8.0-windows10.0.26100.0\win-x64\IPChecker.exe
+```
+
+exe 単体コピーでは動かない。**win-x64 フォルダごと** 配布する。
+
+## 注意
+
+- Unpackaged exe をダブルクリック起動は可能（同フォルダの DLL 必須）
+- デバッグ中（F5 attached）に VS を止めるとアプリも終了する
+- playbook 更新: `C:\Users\k-mizukami\cursor-playbook\scripts\Install-CursorRules.ps1 -ProjectPath .`

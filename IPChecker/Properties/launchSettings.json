@@ -1,0 +1,10 @@
+{
+    "profiles": {
+    "IPChecker (Unpackaged)": {
+      "commandName": "Project"
+    },
+    "IPChecker (Package)": {
+      "commandName": "MsixPackage"
+    }
+  }
+}

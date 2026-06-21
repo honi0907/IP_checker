@@ -1,0 +1,38 @@
+---
+description: IP Checker のアーキテクチャとこのリポジトリ固有のルール
+globs: "**/*"
+alwaysApply: true
+---
+
+# IP Checker
+
+## 概要
+
+- WinUI 3 + MVVM（CommunityToolkit.Mvvm）のデスクトップ常駐アプリ
+- 有効な全ネットワークアダプタの IPv4 と DHCP（自動）/ 静的（手動）を表示
+- コンパクト常駐ウィンドウ + システムトレイ（H.NotifyIcon.WinUI）
+- ターゲット: `net8.0-windows10.0.26100.0`、Unpackaged（`WindowsPackageType=None`）
+
+## このプロジェクトだけのルール
+
+- IP / DHCP 判定は `NetworkMonitorService`（WMI `Win32_NetworkAdapterConfiguration`）を唯一の正とする
+- 設定永続化は `%LocalAppData%\IPChecker\settings.json`（Unpackaged 対応のため `ApplicationData.Current` は使わない）
+- × ボタンは終了ではなくトレイへ最小化。終了はトレイメニューから
+- `ObservableCollection` の更新は UI スレッド（`App.DispatcherQueue.TryEnqueue`）で行う
+- 手動 (静的) バッジを視覚的に最も強調する（メイン要件）
+
+## 汎用ルールの参照
+
+- cursor-playbook: `playbook-*.mdc`（`Install-CursorRules.ps1` で導入）
+- 運用フロー: https://github.com/honi0907/cursor-playbook/blob/master/docs/PROJECT_WORKFLOW.md
+- 第2ウィンドウ・枠線: `playbook-winui-second-window-borderless.mdc`
+
+## 主要ファイル
+
+| やりたいこと | ファイル |
+|-------------|---------|
+| 起動・トレイ連携 | `App.xaml.cs`, `MainWindow.xaml(.cs)` |
+| IP 一覧 UI | `MainPage.xaml`, `ViewModels/MainViewModel.cs` |
+| WMI / 監視 | `Services/NetworkMonitorService.cs` |
+| 最前面・位置・サイズ | `Helpers/WindowHelper.cs` |
+| 設定保存 | `Helpers/SettingsHelper.cs` |

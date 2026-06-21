@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="IPChecker.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:IPChecker"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tb="using:H.NotifyIcon"
+    Title="IP Checker"
+    mc:Ignorable="d">
+
+    <Grid
+        x:Name="RootGrid"
+        Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+        <Frame
+            x:Name="RootFrame"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" />
+
+        <tb:TaskbarIcon
+            x:Name="TrayIcon"
+            LeftClickCommand="{x:Bind ToggleWindowCommand}">
+            <tb:TaskbarIcon.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem Command="{x:Bind ShowWindowCommand}" Text="ウィンドウを表示" />
+                    <MenuFlyoutItem Command="{x:Bind SettingsCommand}" Text="設定" />
+                    <MenuFlyoutItem Command="{x:Bind ControllerTestCommand}" Text="コントローラテスト" />
+                    <MenuFlyoutItem Command="{x:Bind RefreshCommand}" Text="今すぐ更新" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Command="{x:Bind ExitApplicationCommand}" Text="終了" />
+                </MenuFlyout>
+            </tb:TaskbarIcon.ContextFlyout>
+        </tb:TaskbarIcon>
+    </Grid>
+</Window>
