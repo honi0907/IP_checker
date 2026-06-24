@@ -1,5 +1,5 @@
 #define MyAppName "IP Checker"
-#define MyAppVersion "1.1.0"
+#define MyAppVersion "1.1.1"
 #define MyAppPublisher "IP Checker"
 #define MyAppExeName "IPChecker.exe"
 #define MyAppMutex "Global\IPChecker_SingleInstance_v1"
@@ -23,7 +23,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 UninstallDisplayIcon={app}\{#MyAppExeName}
 SetupIconFile=..\IPChecker\Assets\AppIcon.ico
-VersionInfoVersion=1.1.0.0
+VersionInfoVersion=1.1.1.0
 InfoBeforeFile=before-install.txt
 AppMutex={#MyAppMutex}
 CloseApplications=force
@@ -45,6 +45,8 @@ Type: files; Name: "{app}\IPChecker.NetConfig.exe"
 Type: files; Name: "{app}\IPChecker.NetConfig.dll"
 Type: files; Name: "{app}\IPChecker.NetConfig.deps.json"
 Type: files; Name: "{app}\IPChecker.NetConfig.runtimeconfig.json"
+; v1.0.10+ の NetConfig サブフォルダ（v1.1.1 以降は同梱しない）
+Type: filesandordirs; Name: "{app}\NetConfig"
 
 [Files]
 Source: "..\dist\publish\win-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs

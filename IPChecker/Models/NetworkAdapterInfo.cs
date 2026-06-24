@@ -30,8 +30,10 @@ public sealed record NetworkAdapterInfo
 
     public string? DnsServers { get; init; }
 
+    public string? WifiSsid { get; init; }
+
     public string SnapshotKey =>
-        $"{Name}|{IPv4Address}|{AssignmentMode}|{IsPrimary}|{DefaultGateway}|{IsUsbLan}|{UsbLanState}|{LinkStatusLabel}|{ConfigurationIndex}|{SubnetMask}";
+        $"{Name}|{IPv4Address}|{AssignmentMode}|{IsPrimary}|{DefaultGateway}|{IsUsbLan}|{UsbLanState}|{LinkStatusLabel}|{ConfigurationIndex}|{SubnetMask}|{WifiSsid}";
 
     public bool HasSameStatusAs(NetworkAdapterInfo other) =>
         SnapshotKey == other.SnapshotKey;

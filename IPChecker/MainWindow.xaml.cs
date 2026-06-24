@@ -19,6 +19,8 @@ public sealed partial class MainWindow : Window
 
     public IAsyncRelayCommand RefreshCommand { get; }
 
+    public IAsyncRelayCommand CheckForUpdatesCommand { get; }
+
     public IRelayCommand ExitApplicationCommand { get; }
 
     public IRelayCommand ControllerTestCommand { get; }
@@ -30,6 +32,7 @@ public sealed partial class MainWindow : Window
         SettingsCommand = new RelayCommand(OpenSettingsFlyout);
         ControllerTestCommand = new RelayCommand(OpenControllerTest);
         RefreshCommand = new AsyncRelayCommand(() => App.MainViewModel.RefreshAsync());
+        CheckForUpdatesCommand = App.MainViewModel.CheckForUpdatesCommand;
         ExitApplicationCommand = new RelayCommand(App.Shutdown);
 
         InitializeComponent();
@@ -101,6 +104,7 @@ public sealed partial class MainWindow : Window
         }
 
         App.NetworkMonitor.SetWindowVisible(WindowHelper.IsVisible(this));
+        _ = App.MainViewModel.RefreshBatteryAsync();
         UpdateDragRegions();
         App.WriteStartupLog("Window activated.");
     }

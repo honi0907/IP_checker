@@ -13,7 +13,7 @@ public static class WindowHelper
 {
     private const int DetailWidthDip = 440;
     private const int CompactWindowWidthDip = 400;
-    private const int MiniWidthDip = 440;
+    private const int MiniWidthDip = 512;
     private const int MiniContentHeightDip = 54;
     private const int DetailTopDragBarHeightDip = 36;
     private const int DetailHeaderHeightDip = 64;
@@ -22,7 +22,7 @@ public static class WindowHelper
     private const int VerticalPaddingDip = 56;
     private const int MinDetailHeightDip = 280;
     private const int SettingsWidthDip = CompactWindowWidthDip;
-    private const int SettingsHeightDip = 404;
+    private const int SettingsHeightDip = 468;
     private const int ControllerTestWidthDip = CompactWindowWidthDip;
     private const int ControllerTestHeightDip = 220;
     private const int AnchorMarginDip = 16;

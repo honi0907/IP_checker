@@ -71,6 +71,12 @@ public static class SettingsHelper
         set => Update(settings => settings.MiniRotateIntervalSeconds = Math.Clamp(value, 2, 60));
     }
 
+    public static DateTime? LastUpdateCheckUtc
+    {
+        get => Load().LastUpdateCheckUtc;
+        set => Update(settings => settings.LastUpdateCheckUtc = value);
+    }
+
     public static (int X, int Y)? GetWindowPosition()
     {
         var settings = Load();
@@ -159,5 +165,7 @@ public static class SettingsHelper
         public bool MiniRotateAdapters { get; set; } = true;
 
         public int MiniRotateIntervalSeconds { get; set; } = 4;
+
+        public DateTime? LastUpdateCheckUtc { get; set; }
     }
 }

@@ -5,7 +5,9 @@ using IPChecker.Helpers;
 using IPChecker.Models;
 using IPChecker.Services;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace IPChecker.ViewModels;
@@ -13,6 +15,7 @@ namespace IPChecker.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly INetworkMonitorService _networkMonitor;
+    private readonly IUpdateCheckService _updateCheckService;
     private readonly Dictionary<string, NetworkAdapterItemViewModel> _adapterLookup = new(StringComparer.OrdinalIgnoreCase);
     private string _trayTooltipText = "IP Checker";
     private string _lastUpdatedText = string.Empty;
@@ -49,10 +52,22 @@ public partial class MainViewModel : ObservableObject
     private readonly List<NetworkAdapterItemViewModel> _miniRotationSlots = [];
     private int _miniRotationIndex;
     private DispatcherQueueTimer? _miniRotationTimer;
+    private DispatcherQueueTimer? _batteryTimer;
+    private int? _batteryPercent;
+    private BatteryPowerState _batteryPowerState = BatteryPowerState.Discharging;
+    private bool _isStartingUp;
+    private string _updateStatusText = "未確認";
+    private bool _isUpdateAvailable;
+    private bool _isCheckingForUpdates;
+    private string? _updateDownloadUrl;
 
-    public MainViewModel(INetworkMonitorService networkMonitor, IGameControllerService gameControllerService)
+    public MainViewModel(
+        INetworkMonitorService networkMonitor,
+        IGameControllerService gameControllerService,
+        IUpdateCheckService updateCheckService)
     {
         _networkMonitor = networkMonitor;
+        _updateCheckService = updateCheckService;
         _networkMonitor.SnapshotChanged += OnSnapshotChanged;
         ControllerTest = new ControllerTestViewModel(gameControllerService);
     }
@@ -85,6 +100,95 @@ public partial class MainViewModel : ObservableObject
             ? Visibility.Visible
             : Visibility.Collapsed;
 
+    public bool IsStartingUp
+    {
+        get => _isStartingUp;
+        private set => SetProperty(ref _isStartingUp, value);
+    }
+
+    public string BatteryPercentText =>
+        _batteryPercent.HasValue ? $"{_batteryPercent.Value}%" : string.Empty;
+
+    public string BatteryIconGlyph =>
+        _batteryPercent.HasValue
+            ? BatteryStatusHelper.GetBatteryIconGlyph(_batteryPercent.Value, _batteryPowerState)
+            : "\uE83D";
+
+    public Brush BatteryIconForeground =>
+        GetThemeBrush(
+            _batteryPowerState switch
+            {
+                BatteryPowerState.Charging => "AccentTextFillColorPrimaryBrush",
+                BatteryPowerState.PluggedIn => "SystemFillColorSuccessBrush",
+                _ => IsLowBattery
+                    ? "SystemFillColorCriticalBrush"
+                    : "SystemFillColorCautionBrush",
+            },
+            Microsoft.UI.Colors.IndianRed);
+
+    public Brush BatteryContainerBackground =>
+        _batteryPowerState == BatteryPowerState.Discharging
+            ? GetThemeBrush(
+                IsLowBattery
+                    ? "SystemFillColorCriticalBackgroundBrush"
+                    : "SystemFillColorCautionBackgroundBrush",
+                Windows.UI.Color.FromArgb(48, 196, 43, 28))
+            : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+
+    public Brush BatteryContainerBorderBrush =>
+        _batteryPowerState == BatteryPowerState.Discharging
+            ? GetThemeBrush(
+                IsLowBattery
+                    ? "SystemFillColorCriticalBrush"
+                    : "SystemFillColorCautionBrush",
+                Microsoft.UI.Colors.IndianRed)
+            : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+
+    public Thickness BatteryContainerBorderThickness =>
+        _batteryPowerState == BatteryPowerState.Discharging
+            ? new Thickness(1.5)
+            : new Thickness(0);
+
+    public Brush BatteryPercentForeground =>
+        _batteryPowerState == BatteryPowerState.Discharging
+            ? GetThemeBrush(
+                IsLowBattery
+                    ? "SystemFillColorCriticalBrush"
+                    : "SystemFillColorCautionBrush",
+                Microsoft.UI.Colors.DarkRed)
+            : GetThemeBrush(
+                "TextFillColorSecondaryBrush",
+                Microsoft.UI.Colors.Gray);
+
+    public Windows.UI.Text.FontWeight BatteryPercentFontWeight =>
+        _batteryPowerState == BatteryPowerState.Discharging
+            ? FontWeights.SemiBold
+            : FontWeights.Normal;
+
+    public double BatteryPercentFontSize =>
+        _batteryPowerState == BatteryPowerState.Discharging ? 9 : 8;
+
+    private bool IsLowBattery =>
+        _batteryPercent is <= 20;
+
+    public Visibility BatteryPlugVisibility =>
+        _batteryPercent.HasValue && _batteryPowerState == BatteryPowerState.PluggedIn
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+    public string BatteryTooltipText =>
+        _batteryPercent.HasValue
+            ? _batteryPowerState switch
+            {
+                BatteryPowerState.Charging => $"充電中 {_batteryPercent.Value}%",
+                BatteryPowerState.PluggedIn => $"AC接続 {_batteryPercent.Value}%",
+                _ => $"バッテリー {_batteryPercent.Value}%",
+            }
+            : string.Empty;
+
+    public Visibility BatteryVisibility =>
+        _batteryPercent.HasValue ? Visibility.Visible : Visibility.Collapsed;
+
     public string TrayTooltipText
     {
         get => _trayTooltipText;
@@ -98,6 +202,29 @@ public partial class MainViewModel : ObservableObject
     }
 
     public string AppVersionText => AppVersionHelper.DisplayVersionText;
+
+    public string UpdateStatusText
+    {
+        get => _updateStatusText;
+        private set => SetProperty(ref _updateStatusText, value);
+    }
+
+    public bool IsCheckingForUpdates
+    {
+        get => _isCheckingForUpdates;
+        private set
+        {
+            if (SetProperty(ref _isCheckingForUpdates, value))
+            {
+                OnPropertyChanged(nameof(CanCheckForUpdates));
+            }
+        }
+    }
+
+    public bool CanCheckForUpdates => !IsCheckingForUpdates;
+
+    public Visibility UpdateDownloadVisibility =>
+        _isUpdateAvailable ? Visibility.Visible : Visibility.Collapsed;
 
     public string UsbLanSummaryText
     {
@@ -327,42 +454,57 @@ public partial class MainViewModel : ObservableObject
 
     public event EventHandler<bool>? AlwaysOnTopChanged;
 
+    public void ClearStartingUpState()
+    {
+        IsStartingUp = false;
+    }
+
     public async Task InitializeAsync()
     {
-        IsAlwaysOnTop = SettingsHelper.IsAlwaysOnTop;
-        DisplayMode = SettingsHelper.DisplayMode;
-
-        _runAtStartup = SettingsHelper.RunAtStartup;
-        OnPropertyChanged(nameof(RunAtStartup));
-
-        _startInTrayOnly = SettingsHelper.StartInTrayOnly;
-        OnPropertyChanged(nameof(StartInTrayOnly));
-
-        _showVirtualAdapters = SettingsHelper.ShowVirtualAdapters;
-        OnPropertyChanged(nameof(ShowVirtualAdapters));
-
-        _startupDelaySeconds = SettingsHelper.StartupDelaySeconds;
-        OnPropertyChanged(nameof(StartupDelaySeconds));
-
-        _selectedWindowAnchor = SettingsHelper.WindowAnchor;
-        OnPropertyChanged(nameof(SelectedWindowAnchor));
-
-        _enableEfficiencyMode = SettingsHelper.EnableEfficiencyMode;
-        OnPropertyChanged(nameof(EnableEfficiencyMode));
-
-        _miniRotateAdapters = SettingsHelper.MiniRotateAdapters;
-        OnPropertyChanged(nameof(MiniRotateAdapters));
-
-        StartupHelper.SyncWithSetting(_runAtStartup);
-
-        var delaySeconds = SettingsHelper.StartupDelaySeconds;
-        if (delaySeconds > 0)
+        try
         {
-            await Task.Delay(TimeSpan.FromSeconds(delaySeconds)).ConfigureAwait(true);
-        }
+            IsAlwaysOnTop = SettingsHelper.IsAlwaysOnTop;
+            DisplayMode = SettingsHelper.DisplayMode;
 
-        await RefreshAsync().ConfigureAwait(true);
-        _networkMonitor.StartMonitoring();
+            _runAtStartup = SettingsHelper.RunAtStartup;
+            OnPropertyChanged(nameof(RunAtStartup));
+
+            _startInTrayOnly = SettingsHelper.StartInTrayOnly;
+            OnPropertyChanged(nameof(StartInTrayOnly));
+
+            _showVirtualAdapters = SettingsHelper.ShowVirtualAdapters;
+            OnPropertyChanged(nameof(ShowVirtualAdapters));
+
+            _startupDelaySeconds = SettingsHelper.StartupDelaySeconds;
+            OnPropertyChanged(nameof(StartupDelaySeconds));
+
+            _selectedWindowAnchor = SettingsHelper.WindowAnchor;
+            OnPropertyChanged(nameof(SelectedWindowAnchor));
+
+            _enableEfficiencyMode = SettingsHelper.EnableEfficiencyMode;
+            OnPropertyChanged(nameof(EnableEfficiencyMode));
+
+            _miniRotateAdapters = SettingsHelper.MiniRotateAdapters;
+            OnPropertyChanged(nameof(MiniRotateAdapters));
+
+            StartupHelper.SyncWithSetting(_runAtStartup);
+
+            var delaySeconds = SettingsHelper.StartupDelaySeconds;
+            if (delaySeconds > 0)
+            {
+                IsStartingUp = true;
+                await WaitForStartupDelayAsync(delaySeconds).ConfigureAwait(true);
+            }
+
+            await RefreshAsync().ConfigureAwait(true);
+            _networkMonitor.StartMonitoring();
+            StartBatteryMonitoring();
+            _ = CheckForUpdatesCoreAsync(automatic: true);
+        }
+        finally
+        {
+            IsStartingUp = false;
+        }
     }
 
     [RelayCommand]
@@ -372,6 +514,7 @@ public partial class MainViewModel : ObservableObject
         {
             var snapshot = await _networkMonitor.GetSnapshotAsync().ConfigureAwait(false);
             await RunOnUiThreadAsync(() => ApplySnapshot(snapshot, forceUpdate: true)).ConfigureAwait(true);
+            await RefreshBatteryAsync().ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -414,6 +557,82 @@ public partial class MainViewModel : ObservableObject
     private void Exit()
     {
         ExitRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private Task CheckForUpdatesAsync() => CheckForUpdatesCoreAsync(automatic: false);
+
+    private async Task CheckForUpdatesCoreAsync(bool automatic)
+    {
+        if (automatic)
+        {
+            var lastCheck = SettingsHelper.LastUpdateCheckUtc;
+            if (lastCheck.HasValue && DateTime.UtcNow - lastCheck.Value < TimeSpan.FromHours(24))
+            {
+                return;
+            }
+        }
+
+        if (IsCheckingForUpdates)
+        {
+            return;
+        }
+
+        IsCheckingForUpdates = true;
+        if (!automatic)
+        {
+            UpdateStatusText = "確認中...";
+        }
+
+        try
+        {
+            var update = await _updateCheckService.CheckLatestAsync().ConfigureAwait(true);
+            SettingsHelper.LastUpdateCheckUtc = DateTime.UtcNow;
+
+            if (update is null)
+            {
+                UpdateStatusText = "確認できませんでした";
+                ApplyUpdateAvailability(false, null);
+                return;
+            }
+
+            ApplyUpdateAvailability(update.IsNewerThanCurrent, update.PreferredDownloadUrl);
+            UpdateStatusText = update.IsNewerThanCurrent
+                ? $"v{update.LatestVersion} が利用可能です（現在 {AppVersionText}）"
+                : $"最新です（{AppVersionText}）";
+        }
+        catch (Exception ex)
+        {
+            App.WriteStartupLog($"CheckForUpdatesAsync failed: {ex}");
+            UpdateStatusText = "確認できませんでした";
+            ApplyUpdateAvailability(false, null);
+        }
+        finally
+        {
+            IsCheckingForUpdates = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanOpenUpdateDownload))]
+    private async Task OpenUpdateDownloadAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_updateDownloadUrl))
+        {
+            return;
+        }
+
+        await Windows.System.Launcher.LaunchUriAsync(new Uri(_updateDownloadUrl));
+    }
+
+    private bool CanOpenUpdateDownload() =>
+        _isUpdateAvailable && !string.IsNullOrWhiteSpace(_updateDownloadUrl);
+
+    private void ApplyUpdateAvailability(bool isAvailable, string? downloadUrl)
+    {
+        _isUpdateAvailable = isAvailable;
+        _updateDownloadUrl = downloadUrl;
+        OnPropertyChanged(nameof(UpdateDownloadVisibility));
+        OpenUpdateDownloadCommand.NotifyCanExecuteChanged();
     }
 
     private void OnSnapshotChanged(object? sender, NetworkSnapshot snapshot)
@@ -696,6 +915,77 @@ public partial class MainViewModel : ObservableObject
         var dataPackage = new DataPackage();
         dataPackage.SetText(ipAddress);
         Clipboard.SetContent(dataPackage);
+    }
+
+    private void StartBatteryMonitoring()
+    {
+        _batteryTimer?.Stop();
+        _batteryTimer = App.DispatcherQueue.CreateTimer();
+        _batteryTimer.Interval = TimeSpan.FromSeconds(5);
+        _batteryTimer.Tick += OnBatteryTimerTick;
+        _batteryTimer.Start();
+        _ = RefreshBatteryAsync();
+    }
+
+    private void OnBatteryTimerTick(DispatcherQueueTimer sender, object args) =>
+        _ = RefreshBatteryAsync();
+
+    private static Task WaitForStartupDelayAsync(int delaySeconds)
+    {
+        if (delaySeconds <= 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var timer = App.DispatcherQueue.CreateTimer();
+        timer.Interval = TimeSpan.FromSeconds(delaySeconds);
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            tcs.TrySetResult();
+        };
+        timer.Start();
+        return tcs.Task;
+    }
+
+    public async Task RefreshBatteryAsync()
+    {
+        try
+        {
+            var status = await BatteryStatusHelper.TryGetStatusAsync().ConfigureAwait(false);
+            await RunOnUiThreadAsync(() =>
+            {
+                _batteryPercent = status?.Percent;
+                _batteryPowerState = status?.PowerState ?? BatteryPowerState.Discharging;
+                OnPropertyChanged(nameof(BatteryPercentText));
+                OnPropertyChanged(nameof(BatteryIconGlyph));
+                OnPropertyChanged(nameof(BatteryIconForeground));
+                OnPropertyChanged(nameof(BatteryContainerBackground));
+                OnPropertyChanged(nameof(BatteryContainerBorderBrush));
+                OnPropertyChanged(nameof(BatteryContainerBorderThickness));
+                OnPropertyChanged(nameof(BatteryPercentForeground));
+                OnPropertyChanged(nameof(BatteryPercentFontWeight));
+                OnPropertyChanged(nameof(BatteryPercentFontSize));
+                OnPropertyChanged(nameof(BatteryPlugVisibility));
+                OnPropertyChanged(nameof(BatteryTooltipText));
+                OnPropertyChanged(nameof(BatteryVisibility));
+            }).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            App.WriteStartupLog($"RefreshBatteryAsync failed: {ex}");
+        }
+    }
+
+    private static Brush GetThemeBrush(string key, Windows.UI.Color fallbackColor)
+    {
+        if (Application.Current.Resources.TryGetValue(key, out var value) && value is Brush brush)
+        {
+            return brush;
+        }
+
+        return new SolidColorBrush(fallbackColor);
     }
 
     private static Task RunOnUiThreadAsync(Action action)

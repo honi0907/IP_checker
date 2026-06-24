@@ -18,8 +18,6 @@ public partial class App : Application
 
     public static INetworkMonitorService NetworkMonitor { get; private set; } = null!;
 
-    public static INetworkConfigService NetworkConfig { get; private set; } = null!;
-
     public static IGameControllerService GameController { get; private set; } = null!;
 
     private static bool _isShuttingDown;
@@ -56,7 +54,6 @@ public partial class App : Application
         DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
 
         NetworkMonitor = new NetworkMonitorService();
-        NetworkConfig = new NetworkConfigService();
 
         try
         {
@@ -68,7 +65,10 @@ public partial class App : Application
             GameController = new NullGameControllerService();
         }
 
-        MainViewModel = new MainViewModel(NetworkMonitor, GameController);
+        MainViewModel = new MainViewModel(
+            NetworkMonitor,
+            GameController,
+            new GitHubUpdateCheckService());
         MainViewModel.ExitRequested += OnExitRequested;
 
         Window = new MainWindow();

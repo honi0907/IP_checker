@@ -374,11 +374,18 @@ public sealed class NetworkMonitorService : INetworkMonitorService
 
         var primary = SelectPrimaryAdapter(filtered);
 
-
+        var connectedWifiSsid = WifiSsidHelper.TryGetConnectedSsid();
 
         var adapters = filtered
-
-            .Select(a => a with { IsPrimary = primary is not null && a.Name == primary.Name })
+            .Select(a =>
+            {
+                var enriched = a with
+                {
+                    IsPrimary = primary is not null && a.Name == primary.Name,
+                    WifiSsid = WifiSsidHelper.IsWifiAdapter(a.Name) ? connectedWifiSsid : null,
+                };
+                return enriched;
+            })
 
             .OrderByDescending(a => a.IsPrimary)
 

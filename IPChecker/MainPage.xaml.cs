@@ -141,6 +141,7 @@ public sealed partial class MainPage : Page
         catch (Exception ex)
         {
             App.WriteStartupLog($"Initialize failed: {ex}");
+            ViewModel.ClearStartingUpState();
         }
     }
 

@@ -60,10 +60,38 @@ public partial class NetworkAdapterItemViewModel : ObservableObject
         UseMiniUsbLanLinkStack ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility MiniInlineShortNameVisibility =>
-        UseMiniUsbLanLinkStack ? Visibility.Collapsed : Visibility.Visible;
+        UseMiniUsbLanLinkStack || UseMiniWifiSsidStack ? Visibility.Collapsed : Visibility.Visible;
+
+    public bool UseMiniWifiSsidStack =>
+        IsWifiAdapter
+        && !string.IsNullOrWhiteSpace(WifiSsid)
+        && !UseMiniUsbLanLinkStack;
+
+    public Visibility MiniWifiSsidStackVisibility =>
+        UseMiniWifiSsidStack ? Visibility.Visible : Visibility.Collapsed;
+
+    private string _wifiSsid = string.Empty;
+
+    public bool IsWifiAdapter { get; private set; }
+
+    public string WifiSsid
+    {
+        get => _wifiSsid;
+        private set
+        {
+            if (SetProperty(ref _wifiSsid, value))
+            {
+                OnPropertyChanged(nameof(DetailWifiSsidVisibility));
+                NotifyMiniLayoutVisibilityChanged();
+            }
+        }
+    }
+
+    public Visibility DetailWifiSsidVisibility =>
+        string.IsNullOrWhiteSpace(WifiSsid) ? Visibility.Collapsed : Visibility.Visible;
 
     public Visibility MiniInlineLinkStatusVisibility =>
-        !UseMiniUsbLanLinkStack && LinkStatusVisibility == Visibility.Visible
+        !UseMiniUsbLanLinkStack && !UseMiniWifiSsidStack && LinkStatusVisibility == Visibility.Visible
             ? Visibility.Visible
             : Visibility.Collapsed;
 
@@ -136,7 +164,8 @@ public partial class NetworkAdapterItemViewModel : ObservableObject
         && _assignmentMode == info.AssignmentMode
         && IsPrimary == info.IsPrimary
         && IsUsbLan == info.IsUsbLan
-        && LinkStatusLabel == (info.LinkStatusLabel ?? string.Empty);
+        && LinkStatusLabel == (info.LinkStatusLabel ?? string.Empty)
+        && WifiSsid == (info.WifiSsid ?? string.Empty);
 
     public void UpdateFrom(NetworkAdapterInfo info)
     {
@@ -149,6 +178,8 @@ public partial class NetworkAdapterItemViewModel : ObservableObject
         DefaultGateway = info.DefaultGateway;
         DnsServers = info.DnsServers;
         LinkStatusLabel = info.LinkStatusLabel ?? string.Empty;
+        IsWifiAdapter = Helpers.WifiSsidHelper.IsWifiAdapter(info.Name);
+        WifiSsid = info.WifiSsid ?? string.Empty;
         Name = info.Name;
         ShortName = GetShortName(info);
         IpAddressDisplay = string.IsNullOrWhiteSpace(info.IPv4Address) ? "—" : info.IPv4Address;
@@ -169,6 +200,9 @@ public partial class NetworkAdapterItemViewModel : ObservableObject
         OnPropertyChanged(nameof(CanOpenWindowsNetworkVisibility));
         OnPropertyChanged(nameof(AssignmentMode));
         OnPropertyChanged(nameof(RowBackground));
+        OnPropertyChanged(nameof(IsWifiAdapter));
+        OnPropertyChanged(nameof(WifiSsid));
+        OnPropertyChanged(nameof(DetailWifiSsidVisibility));
         NotifyMiniLayoutVisibilityChanged();
     }
 
@@ -183,6 +217,8 @@ public partial class NetworkAdapterItemViewModel : ObservableObject
         DefaultGateway = source.DefaultGateway;
         DnsServers = source.DnsServers;
         _linkStatusLabel = source._linkStatusLabel;
+        IsWifiAdapter = source.IsWifiAdapter;
+        WifiSsid = source.WifiSsid;
         Name = source.Name;
         ShortName = source.ShortName;
         IpAddressDisplay = source.IpAddressDisplay;
@@ -206,6 +242,9 @@ public partial class NetworkAdapterItemViewModel : ObservableObject
         OnPropertyChanged(nameof(RowBackground));
         OnPropertyChanged(nameof(LinkStatusLabel));
         OnPropertyChanged(nameof(LinkStatusVisibility));
+        OnPropertyChanged(nameof(IsWifiAdapter));
+        OnPropertyChanged(nameof(WifiSsid));
+        OnPropertyChanged(nameof(DetailWifiSsidVisibility));
         NotifyMiniLayoutVisibilityChanged();
     }
 
@@ -213,6 +252,8 @@ public partial class NetworkAdapterItemViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(UseMiniUsbLanLinkStack));
         OnPropertyChanged(nameof(MiniUsbLanLinkStackVisibility));
+        OnPropertyChanged(nameof(UseMiniWifiSsidStack));
+        OnPropertyChanged(nameof(MiniWifiSsidStackVisibility));
         OnPropertyChanged(nameof(MiniInlineShortNameVisibility));
         OnPropertyChanged(nameof(MiniInlineLinkStatusVisibility));
     }

@@ -14,9 +14,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <WindowsPackageType>None</WindowsPackageType>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.1.1</Version>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <FileVersion>1.1.1.0</FileVersion>
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
 
@@ -122,39 +122,4 @@
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">False</PublishTrimmed>
   </PropertyGroup>
-
-  <Target Name="BuildNetConfigHelper" BeforeTargets="Build">
-    <MSBuild
-      Projects="$(MSBuildThisProjectDirectory)..\IPChecker.NetConfig\IPChecker.NetConfig.csproj"
-      Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-x64"
-      Targets="Build" />
-  </Target>
-
-  <Target Name="CopyNetConfigHelper" AfterTargets="Build">
-    <PropertyGroup>
-      <_NetConfigOutput>$(MSBuildThisProjectDirectory)..\IPChecker.NetConfig\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.26100.0\win-x64</_NetConfigOutput>
-      <_NetConfigDestination>$(TargetDir)NetConfig\</_NetConfigDestination>
-    </PropertyGroup>
-    <ItemGroup>
-      <_NetConfigFiles Include="$(_NetConfigOutput)\*.*" Exclude="$(_NetConfigOutput)\*.pdb" />
-    </ItemGroup>
-    <MakeDir Directories="$(_NetConfigDestination)" />
-    <Copy SourceFiles="@(_NetConfigFiles)" DestinationFolder="$(_NetConfigDestination)" SkipUnchangedFiles="true" Condition="Exists('%(_NetConfigFiles.Identity)')" />
-    <Delete Files="$(TargetDir)IPChecker.NetConfig.exe;$(TargetDir)IPChecker.NetConfig.dll;$(TargetDir)IPChecker.NetConfig.deps.json;$(TargetDir)IPChecker.NetConfig.runtimeconfig.json" />
-  </Target>
-
-  <Target Name="CopyNetConfigHelperToPublish" AfterTargets="Publish">
-    <PropertyGroup>
-      <_NetConfigOutput>$(MSBuildThisProjectDirectory)..\IPChecker.NetConfig\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.26100.0\win-x64</_NetConfigOutput>
-      <_NetConfigDestination>$(PublishDir)NetConfig\</_NetConfigDestination>
-    </PropertyGroup>
-    <MSBuild
-      Projects="$(MSBuildThisProjectDirectory)..\IPChecker.NetConfig\IPChecker.NetConfig.csproj"
-      Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-x64"
-      Targets="Build" />
-    <ItemGroup>
-      <_NetConfigPublishFiles Include="$(_NetConfigOutput)\*.*" Exclude="$(_NetConfigOutput)\*.pdb" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_NetConfigPublishFiles)" DestinationFolder="$(_NetConfigDestination)" SkipUnchangedFiles="true" Condition="Exists('%(_NetConfigPublishFiles.Identity)')" />
-  </Target>
 </Project>

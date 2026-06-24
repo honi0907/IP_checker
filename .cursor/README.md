@@ -16,7 +16,7 @@
 ## 更新
 
 ```powershell
-C:\Users\k-mizukami\cursor-playbook\scripts\Install-CursorRules.ps1 -ProjectPath "c:\Users\k-mizukami\Desktop\IP_checker\IPChecker"
+C:\Users\k-mizukami\cursor-playbook\scripts\Install-CursorRules.ps1 -ProjectPath "c:\Users\k-mizukami\Desktop\IP_checker"
 ```
 
 ## 参照

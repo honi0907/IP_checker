@@ -26,6 +26,7 @@
                     <MenuFlyoutItem Command="{x:Bind SettingsCommand}" Text="設定" />
                     <MenuFlyoutItem Command="{x:Bind ControllerTestCommand}" Text="コントローラテスト" />
                     <MenuFlyoutItem Command="{x:Bind RefreshCommand}" Text="今すぐ更新" />
+                    <MenuFlyoutItem Command="{x:Bind CheckForUpdatesCommand}" Text="アプリの更新を確認" />
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem Command="{x:Bind ExitApplicationCommand}" Text="終了" />
                 </MenuFlyout>
