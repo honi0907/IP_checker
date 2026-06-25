@@ -1,5 +1,5 @@
 #define MyAppName "IP Checker"
-#define MyAppVersion "1.1.2"
+#define MyAppVersion "1.1.3"
 #define MyAppPublisher "IP Checker"
 #define MyAppExeName "IPChecker.exe"
 #define MyAppMutex "Global\IPChecker_SingleInstance_v1"
@@ -23,7 +23,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 UninstallDisplayIcon={app}\{#MyAppExeName}
 SetupIconFile=..\IPChecker\Assets\AppIcon.ico
-VersionInfoVersion=1.1.2.0
+VersionInfoVersion=1.1.3.0
 InfoBeforeFile=before-install.txt
 AppMutex={#MyAppMutex}
 CloseApplications=force

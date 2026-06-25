@@ -578,38 +578,47 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        IsCheckingForUpdates = true;
-        if (!automatic)
+        await RunOnUiThreadAsync(() =>
         {
-            UpdateStatusText = "確認中...";
-        }
+            IsCheckingForUpdates = true;
+            if (!automatic)
+            {
+                UpdateStatusText = "確認中...";
+            }
+        }).ConfigureAwait(true);
 
         try
         {
-            var update = await _updateCheckService.CheckLatestAsync().ConfigureAwait(true);
+            var update = await _updateCheckService.CheckLatestAsync().ConfigureAwait(false);
             SettingsHelper.LastUpdateCheckUtc = DateTime.UtcNow;
 
-            if (update is null)
+            await RunOnUiThreadAsync(() =>
             {
-                UpdateStatusText = "確認できませんでした";
-                ApplyUpdateAvailability(false, null);
-                return;
-            }
+                if (update is null)
+                {
+                    UpdateStatusText = "確認できませんでした";
+                    ApplyUpdateAvailability(false, null);
+                    return;
+                }
 
-            ApplyUpdateAvailability(update.IsNewerThanCurrent, update.PreferredDownloadUrl);
-            UpdateStatusText = update.IsNewerThanCurrent
-                ? $"v{update.LatestVersion} が利用可能です（現在 {AppVersionText}）"
-                : $"最新です（{AppVersionText}）";
+                ApplyUpdateAvailability(update.IsNewerThanCurrent, update.PreferredDownloadUrl);
+                UpdateStatusText = update.IsNewerThanCurrent
+                    ? $"v{update.LatestVersion} が利用可能です（現在 {AppVersionText}）"
+                    : $"最新です（{AppVersionText}）";
+            }).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
             App.WriteStartupLog($"CheckForUpdatesAsync failed: {ex}");
-            UpdateStatusText = "確認できませんでした";
-            ApplyUpdateAvailability(false, null);
+            await RunOnUiThreadAsync(() =>
+            {
+                UpdateStatusText = "確認できませんでした";
+                ApplyUpdateAvailability(false, null);
+            }).ConfigureAwait(true);
         }
         finally
         {
-            IsCheckingForUpdates = false;
+            await RunOnUiThreadAsync(() => IsCheckingForUpdates = false).ConfigureAwait(true);
         }
     }
 
