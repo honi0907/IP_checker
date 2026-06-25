@@ -59,6 +59,7 @@ public partial class MainViewModel : ObservableObject
     private string _updateStatusText = "未確認";
     private bool _isUpdateAvailable;
     private bool _isCheckingForUpdates;
+    private bool _isInstallingUpdate;
     private string? _updateDownloadUrl;
 
     public MainViewModel(
@@ -190,7 +191,20 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    public bool CanCheckForUpdates => !IsCheckingForUpdates;
+    public bool CanCheckForUpdates => !IsCheckingForUpdates && !IsInstallingUpdate;
+
+    public bool IsInstallingUpdate
+    {
+        get => _isInstallingUpdate;
+        private set
+        {
+            if (SetProperty(ref _isInstallingUpdate, value))
+            {
+                OnPropertyChanged(nameof(CanCheckForUpdates));
+                OpenUpdateDownloadCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
 
     public Visibility UpdateDownloadVisibility =>
         _isUpdateAvailable ? Visibility.Visible : Visibility.Collapsed;
@@ -599,11 +613,50 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        await Windows.System.Launcher.LaunchUriAsync(new Uri(_updateDownloadUrl));
+        if (!UpdateInstallerHelper.IsInstallerUrl(_updateDownloadUrl))
+        {
+            await Windows.System.Launcher.LaunchUriAsync(new Uri(_updateDownloadUrl));
+            return;
+        }
+
+        await RunOnUiThreadAsync(() =>
+        {
+            IsInstallingUpdate = true;
+            UpdateStatusText = "インストーラーを取得中...";
+        }).ConfigureAwait(true);
+
+        try
+        {
+            var installerPath = await UpdateInstallerHelper
+                .DownloadInstallerAsync(_updateDownloadUrl)
+                .ConfigureAwait(false);
+
+            await RunOnUiThreadAsync(() =>
+            {
+                UpdateStatusText = "インストーラーを起動しています...";
+            }).ConfigureAwait(true);
+
+            UpdateInstallerHelper.LaunchInstaller(installerPath);
+            App.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            App.WriteStartupLog($"OpenUpdateDownloadAsync failed: {ex}");
+            await RunOnUiThreadAsync(() =>
+            {
+                UpdateStatusText = "インストールを開始できませんでした";
+            }).ConfigureAwait(true);
+        }
+        finally
+        {
+            await RunOnUiThreadAsync(() => IsInstallingUpdate = false).ConfigureAwait(true);
+        }
     }
 
     private bool CanOpenUpdateDownload() =>
-        _isUpdateAvailable && !string.IsNullOrWhiteSpace(_updateDownloadUrl);
+        _isUpdateAvailable
+        && !string.IsNullOrWhiteSpace(_updateDownloadUrl)
+        && !IsInstallingUpdate;
 
     private void ApplyUpdateAvailability(bool isAvailable, string? downloadUrl)
     {

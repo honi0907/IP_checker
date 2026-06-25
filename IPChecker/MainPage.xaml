@@ -629,7 +629,7 @@
                                 IsEnabled="{x:Bind ViewModel.CanCheckForUpdates, Mode=OneWay}" />
                             <Button
                                 Command="{x:Bind ViewModel.OpenUpdateDownloadCommand}"
-                                Content="ダウンロード"
+                                Content="インストール"
                                 Visibility="{x:Bind ViewModel.UpdateDownloadVisibility, Mode=OneWay}" />
                         </StackPanel>
                     </StackPanel>
