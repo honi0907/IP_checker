@@ -250,43 +250,30 @@
                 </Button>
             </StackPanel>
 
-            <Border
+            <StackPanel
                 Grid.Column="4"
-                Margin="4,0,0,0"
-                Padding="5,3"
+                Margin="2,0,0,0"
                 VerticalAlignment="Center"
-                Background="{x:Bind ViewModel.BatteryContainerBackground, Mode=OneWay}"
-                BorderBrush="{x:Bind ViewModel.BatteryContainerBorderBrush, Mode=OneWay}"
-                BorderThickness="{x:Bind ViewModel.BatteryContainerBorderThickness, Mode=OneWay}"
-                CornerRadius="6"
+                Orientation="Horizontal"
+                Spacing="2"
                 Visibility="{x:Bind ViewModel.BatteryVisibility, Mode=OneWay}">
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    Spacing="0">
-                    <FontIcon
-                        HorizontalAlignment="Center"
-                        FontSize="26"
-                        Foreground="{x:Bind ViewModel.BatteryIconForeground, Mode=OneWay}"
-                        Glyph="{x:Bind ViewModel.BatteryIconGlyph, Mode=OneWay}"
-                        ToolTipService.ToolTip="{x:Bind ViewModel.BatteryTooltipText, Mode=OneWay}" />
-                    <FontIcon
-                        HorizontalAlignment="Center"
-                        Margin="0,-4,0,-2"
-                        FontSize="11"
-                        Foreground="{ThemeResource SystemFillColorSuccessBrush}"
-                        Glyph="&#xE823;"
-                        ToolTipService.ToolTip="AC接続"
-                        Visibility="{x:Bind ViewModel.BatteryPlugVisibility, Mode=OneWay}" />
-                    <TextBlock
-                        HorizontalAlignment="Center"
-                        Margin="0,-1,0,0"
-                        FontSize="{x:Bind ViewModel.BatteryPercentFontSize, Mode=OneWay}"
-                        FontWeight="{x:Bind ViewModel.BatteryPercentFontWeight, Mode=OneWay}"
-                        Foreground="{x:Bind ViewModel.BatteryPercentForeground, Mode=OneWay}"
-                        LineHeight="11"
-                        Text="{x:Bind ViewModel.BatteryPercentText, Mode=OneWay}" />
-                </StackPanel>
-            </Border>
+                <FontIcon
+                    VerticalAlignment="Center"
+                    FontSize="22"
+                    Foreground="{x:Bind ViewModel.BatteryIconForeground, Mode=OneWay}"
+                    Glyph="{x:Bind ViewModel.BatteryIconGlyph, Mode=OneWay}"
+                    ToolTipService.ToolTip="{x:Bind ViewModel.BatteryTooltipText, Mode=OneWay}" />
+                <TextBlock
+                    MinWidth="26"
+                    VerticalAlignment="Center"
+                    FontSize="11"
+                    FontWeight="{x:Bind ViewModel.BatteryPercentFontWeight, Mode=OneWay}"
+                    Foreground="{x:Bind ViewModel.BatteryPercentForeground, Mode=OneWay}"
+                    LineHeight="12"
+                    Text="{x:Bind ViewModel.BatteryPercentText, Mode=OneWay}"
+                    TextAlignment="Center"
+                    TextWrapping="NoWrap" />
+            </StackPanel>
         </Grid>
 
         <Grid

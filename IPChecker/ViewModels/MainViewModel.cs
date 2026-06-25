@@ -126,29 +126,6 @@ public partial class MainViewModel : ObservableObject
             },
             Microsoft.UI.Colors.IndianRed);
 
-    public Brush BatteryContainerBackground =>
-        _batteryPowerState == BatteryPowerState.Discharging
-            ? GetThemeBrush(
-                IsLowBattery
-                    ? "SystemFillColorCriticalBackgroundBrush"
-                    : "SystemFillColorCautionBackgroundBrush",
-                Windows.UI.Color.FromArgb(48, 196, 43, 28))
-            : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-
-    public Brush BatteryContainerBorderBrush =>
-        _batteryPowerState == BatteryPowerState.Discharging
-            ? GetThemeBrush(
-                IsLowBattery
-                    ? "SystemFillColorCriticalBrush"
-                    : "SystemFillColorCautionBrush",
-                Microsoft.UI.Colors.IndianRed)
-            : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-
-    public Thickness BatteryContainerBorderThickness =>
-        _batteryPowerState == BatteryPowerState.Discharging
-            ? new Thickness(1.5)
-            : new Thickness(0);
-
     public Brush BatteryPercentForeground =>
         _batteryPowerState == BatteryPowerState.Discharging
             ? GetThemeBrush(
@@ -165,16 +142,8 @@ public partial class MainViewModel : ObservableObject
             ? FontWeights.SemiBold
             : FontWeights.Normal;
 
-    public double BatteryPercentFontSize =>
-        _batteryPowerState == BatteryPowerState.Discharging ? 9 : 8;
-
     private bool IsLowBattery =>
         _batteryPercent is <= 20;
-
-    public Visibility BatteryPlugVisibility =>
-        _batteryPercent.HasValue && _batteryPowerState == BatteryPowerState.PluggedIn
-            ? Visibility.Visible
-            : Visibility.Collapsed;
 
     public string BatteryTooltipText =>
         _batteryPercent.HasValue
@@ -970,13 +939,8 @@ public partial class MainViewModel : ObservableObject
                 OnPropertyChanged(nameof(BatteryPercentText));
                 OnPropertyChanged(nameof(BatteryIconGlyph));
                 OnPropertyChanged(nameof(BatteryIconForeground));
-                OnPropertyChanged(nameof(BatteryContainerBackground));
-                OnPropertyChanged(nameof(BatteryContainerBorderBrush));
-                OnPropertyChanged(nameof(BatteryContainerBorderThickness));
                 OnPropertyChanged(nameof(BatteryPercentForeground));
                 OnPropertyChanged(nameof(BatteryPercentFontWeight));
-                OnPropertyChanged(nameof(BatteryPercentFontSize));
-                OnPropertyChanged(nameof(BatteryPlugVisibility));
                 OnPropertyChanged(nameof(BatteryTooltipText));
                 OnPropertyChanged(nameof(BatteryVisibility));
             }).ConfigureAwait(true);
