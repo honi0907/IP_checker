@@ -253,26 +253,27 @@
             <StackPanel
                 Grid.Column="4"
                 Margin="2,0,0,0"
+                HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Orientation="Horizontal"
-                Spacing="2"
+                Spacing="0"
+                ToolTipService.ToolTip="{x:Bind ViewModel.BatteryTooltipText, Mode=OneWay}"
                 Visibility="{x:Bind ViewModel.BatteryVisibility, Mode=OneWay}">
-                <FontIcon
-                    VerticalAlignment="Center"
-                    FontSize="22"
-                    Foreground="{x:Bind ViewModel.BatteryIconForeground, Mode=OneWay}"
-                    Glyph="{x:Bind ViewModel.BatteryIconGlyph, Mode=OneWay}"
-                    ToolTipService.ToolTip="{x:Bind ViewModel.BatteryTooltipText, Mode=OneWay}" />
                 <TextBlock
-                    MinWidth="26"
-                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
                     FontSize="11"
                     FontWeight="{x:Bind ViewModel.BatteryPercentFontWeight, Mode=OneWay}"
                     Foreground="{x:Bind ViewModel.BatteryPercentForeground, Mode=OneWay}"
                     LineHeight="12"
                     Text="{x:Bind ViewModel.BatteryPercentText, Mode=OneWay}"
-                    TextAlignment="Center"
                     TextWrapping="NoWrap" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="9"
+                    FontWeight="SemiBold"
+                    Foreground="{x:Bind ViewModel.BatteryChargingStatusForeground, Mode=OneWay}"
+                    LineHeight="10"
+                    Text="充電中"
+                    Visibility="{x:Bind ViewModel.BatteryChargingStatusVisibility, Mode=OneWay}" />
             </StackPanel>
         </Grid>
 

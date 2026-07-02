@@ -60,43 +60,6 @@ internal static class BatteryStatusHelper
         return onAc ? BatteryPowerState.PluggedIn : BatteryPowerState.Discharging;
     }
 
-    public static string GetBatteryIconGlyph(int percent, BatteryPowerState powerState)
-    {
-        var level = Math.Clamp((int)Math.Round(percent / 10.0), 0, 10);
-        if (powerState == BatteryPowerState.Charging)
-        {
-            return level switch
-            {
-                0 => "\uE83E",
-                1 => "\uE840",
-                2 => "\uE841",
-                3 => "\uE842",
-                4 => "\uE843",
-                5 => "\uE844",
-                6 => "\uE845",
-                7 => "\uE846",
-                8 => "\uE847",
-                9 => "\uE848",
-                _ => "\uE86A",
-            };
-        }
-
-        return level switch
-        {
-            0 => "\uE83F",
-            1 => "\uE850",
-            2 => "\uE851",
-            3 => "\uE852",
-            4 => "\uE853",
-            5 => "\uE854",
-            6 => "\uE855",
-            7 => "\uE856",
-            8 => "\uE857",
-            9 => "\uE858",
-            _ => "\uE859",
-        };
-    }
-
     [DllImport("kernel32.dll")]
     private static extern bool GetSystemPowerStatus(out SystemPowerStatus status);
 

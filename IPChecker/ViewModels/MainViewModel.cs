@@ -110,22 +110,13 @@ public partial class MainViewModel : ObservableObject
     public string BatteryPercentText =>
         _batteryPercent.HasValue ? $"{_batteryPercent.Value}%" : string.Empty;
 
-    public string BatteryIconGlyph =>
-        _batteryPercent.HasValue
-            ? BatteryStatusHelper.GetBatteryIconGlyph(_batteryPercent.Value, _batteryPowerState)
-            : "\uE83D";
+    public Visibility BatteryChargingStatusVisibility =>
+        _batteryPowerState == BatteryPowerState.Charging
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 
-    public Brush BatteryIconForeground =>
-        GetThemeBrush(
-            _batteryPowerState switch
-            {
-                BatteryPowerState.Charging => "AccentTextFillColorPrimaryBrush",
-                BatteryPowerState.PluggedIn => "SystemFillColorSuccessBrush",
-                _ => IsLowBattery
-                    ? "SystemFillColorCriticalBrush"
-                    : "SystemFillColorCautionBrush",
-            },
-            Microsoft.UI.Colors.IndianRed);
+    public Brush BatteryChargingStatusForeground =>
+        GetThemeBrush("AccentTextFillColorPrimaryBrush", Microsoft.UI.Colors.DodgerBlue);
 
     public Brush BatteryPercentForeground =>
         _batteryPowerState == BatteryPowerState.Discharging
@@ -990,8 +981,8 @@ public partial class MainViewModel : ObservableObject
                 _batteryPercent = status?.Percent;
                 _batteryPowerState = status?.PowerState ?? BatteryPowerState.Discharging;
                 OnPropertyChanged(nameof(BatteryPercentText));
-                OnPropertyChanged(nameof(BatteryIconGlyph));
-                OnPropertyChanged(nameof(BatteryIconForeground));
+                OnPropertyChanged(nameof(BatteryChargingStatusVisibility));
+                OnPropertyChanged(nameof(BatteryChargingStatusForeground));
                 OnPropertyChanged(nameof(BatteryPercentForeground));
                 OnPropertyChanged(nameof(BatteryPercentFontWeight));
                 OnPropertyChanged(nameof(BatteryTooltipText));
